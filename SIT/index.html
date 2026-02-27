@@ -1,0 +1,1399 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FarmWise AI — Harvest Optimization</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <style>
+      :root {
+        --bg: #0a0f1c;
+        --bg2: #111827;
+        --bg3: #1e293b;
+        --card: rgba(30, 41, 59, 0.7);
+        --border: rgba(100, 116, 139, 0.3);
+        --text: #e2e8f0;
+        --text2: #94a3b8;
+        --green: #22c55e;
+        --green-bg: rgba(34, 197, 94, 0.12);
+        --yellow: #f59e0b;
+        --yellow-bg: rgba(245, 158, 11, 0.12);
+        --red: #ef4444;
+        --red-bg: rgba(239, 68, 68, 0.12);
+        --blue: #3b82f6;
+        --blue-bg: rgba(59, 130, 246, 0.12);
+        --purple: #a855f7;
+        --purple-bg: rgba(168, 85, 247, 0.12);
+        --accent: #10b981;
+        --gradient: linear-gradient(
+          135deg,
+          #10b981 0%,
+          #3b82f6 50%,
+          #a855f7 100%
+        );
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Inter", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+      body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background:
+          radial-gradient(
+            ellipse at 20% 50%,
+            rgba(16, 185, 129, 0.08),
+            transparent 60%
+          ),
+          radial-gradient(
+            ellipse at 80% 20%,
+            rgba(59, 130, 246, 0.06),
+            transparent 60%
+          ),
+          radial-gradient(
+            ellipse at 60% 80%,
+            rgba(168, 85, 247, 0.05),
+            transparent 60%
+          );
+        z-index: 0;
+        pointer-events: none;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        position: relative;
+        z-index: 1;
+      }
+      .header {
+        text-align: center;
+        padding: 30px 0 20px;
+      }
+      .header h1 {
+        font-size: 2.4rem;
+        font-weight: 800;
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 6px;
+      }
+      .header p {
+        color: var(--text2);
+        font-size: 0.95rem;
+      }
+      .badge {
+        display: inline-block;
+        padding: 4px 14px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        background: var(--green-bg);
+        color: var(--green);
+        font-weight: 600;
+        margin-top: 8px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+      }
+      .lang-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px;
+        background: var(--bg2);
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        margin-top: 10px;
+        margin-left: 12px;
+        vertical-align: middle;
+      }
+      .lang-btn {
+        padding: 5px 14px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text2);
+        border: none;
+        background: transparent;
+        transition: all 0.2s;
+        font-family: "Inter", sans-serif;
+      }
+      .lang-btn.active {
+        background: var(--gradient);
+        color: white;
+      }
+      .tabs {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 24px;
+        background: var(--bg2);
+        border-radius: 12px;
+        padding: 4px;
+        border: 1px solid var(--border);
+      }
+      .tab {
+        flex: 1;
+        padding: 12px;
+        text-align: center;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text2);
+        transition: all 0.2s;
+      }
+      .tab:hover {
+        color: var(--text);
+      }
+      .tab.active {
+        background: var(--gradient);
+        color: white;
+      }
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+        animation: fadeUp 0.4s ease;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 20px;
+        backdrop-filter: blur(20px);
+        transition: all 0.3s;
+      }
+      .card:hover {
+        border-color: rgba(100, 116, 139, 0.5);
+      }
+      .card-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+      .grid-3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 16px;
+      }
+      .grid-4 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+      }
+      @media (max-width: 768px) {
+        .grid-2,
+        .grid-3,
+        .grid-4 {
+          grid-template-columns: 1fr;
+        }
+      }
+      .form-group {
+        margin-bottom: 16px;
+      }
+      .form-group label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text2);
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .form-group input,
+      .form-group select {
+        width: 100%;
+        padding: 10px 14px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--bg2);
+        color: var(--text);
+        font-family: "Inter", sans-serif;
+        font-size: 0.95rem;
+        transition: border-color 0.2s;
+      }
+      .form-group input:focus,
+      .form-group select:focus {
+        outline: none;
+        border-color: var(--accent);
+      }
+      .form-group .hint {
+        font-size: 0.7rem;
+        color: var(--text2);
+        margin-top: 4px;
+      }
+      .auto-badge {
+        display: inline-block;
+        font-size: 0.65rem;
+        padding: 2px 8px;
+        border-radius: 6px;
+        background: var(--blue-bg);
+        color: var(--blue);
+        font-weight: 600;
+        margin-left: 6px;
+        animation: fadeUp 0.3s ease;
+      }
+      .auto-fill-bar {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .auto-btn {
+        padding: 8px 16px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--bg2);
+        color: var(--text);
+        font-family: "Inter", sans-serif;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .auto-btn:hover {
+        border-color: var(--accent);
+        background: var(--bg3);
+      }
+      .auto-btn.loading {
+        opacity: 0.6;
+        pointer-events: none;
+      }
+      .auto-btn.done {
+        border-color: var(--green);
+        color: var(--green);
+      }
+      .auto-status {
+        font-size: 0.8rem;
+        color: var(--green);
+        font-weight: 500;
+        animation: fadeUp 0.3s ease;
+      }
+      .btn-predict {
+        width: 100%;
+        padding: 14px;
+        border: none;
+        border-radius: 12px;
+        font-family: "Inter", sans-serif;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: white;
+        cursor: pointer;
+        margin-top: 10px;
+        background: var(--gradient);
+        transition: all 0.3s;
+      }
+      .btn-predict:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(16, 185, 129, 0.3);
+      }
+      .btn-predict:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+      #results {
+        display: none;
+      }
+      #results.visible {
+        display: block;
+        animation: fadeUp 0.5s ease;
+      }
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .decision-banner {
+        padding: 24px;
+        border-radius: 16px;
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .decision-banner.harvest {
+        background: linear-gradient(
+          135deg,
+          rgba(34, 197, 94, 0.15),
+          rgba(16, 185, 129, 0.08)
+        );
+        border: 1px solid rgba(34, 197, 94, 0.3);
+      }
+      .decision-banner.wait {
+        background: linear-gradient(
+          135deg,
+          rgba(245, 158, 11, 0.15),
+          rgba(234, 179, 8, 0.08)
+        );
+        border: 1px solid rgba(245, 158, 11, 0.3);
+      }
+      .decision-banner.delay {
+        background: linear-gradient(
+          135deg,
+          rgba(239, 68, 68, 0.15),
+          rgba(220, 38, 38, 0.08)
+        );
+        border: 1px solid rgba(239, 68, 68, 0.3);
+      }
+      .decision-icon {
+        font-size: 3rem;
+        margin-bottom: 8px;
+      }
+      .decision-text {
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin-bottom: 4px;
+      }
+      .decision-sub,
+      .decision-conf {
+        font-size: 0.9rem;
+        color: var(--text2);
+        margin-top: 4px;
+      }
+      .risk-meter {
+        margin: 16px 0;
+      }
+      .risk-bar-bg {
+        width: 100%;
+        height: 10px;
+        border-radius: 5px;
+        background: linear-gradient(
+          90deg,
+          var(--green),
+          var(--yellow),
+          var(--red)
+        );
+        position: relative;
+      }
+      .risk-needle {
+        width: 4px;
+        height: 20px;
+        border-radius: 2px;
+        background: white;
+        position: absolute;
+        top: -5px;
+        transition: left 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+      }
+      .risk-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.7rem;
+        color: var(--text2);
+        margin-top: 6px;
+      }
+      .stat-card {
+        padding: 16px;
+        border-radius: 12px;
+        text-align: center;
+        background: var(--bg2);
+        border: 1px solid var(--border);
+      }
+      .stat-value {
+        font-size: 1.6rem;
+        font-weight: 800;
+      }
+      .stat-label {
+        font-size: 0.75rem;
+        color: var(--text2);
+        margin-top: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .market-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 12px;
+      }
+      .market-table th {
+        text-align: left;
+        padding: 10px 12px;
+        font-size: 0.75rem;
+        color: var(--text2);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid var(--border);
+      }
+      .market-table td {
+        padding: 10px 12px;
+        font-size: 0.9rem;
+        border-bottom: 1px solid rgba(100, 116, 139, 0.15);
+      }
+      .market-table tr:hover td {
+        background: rgba(255, 255, 255, 0.03);
+      }
+      .market-table .best {
+        color: var(--green);
+        font-weight: 600;
+      }
+      .tier-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 600;
+      }
+      .tier-1 {
+        background: var(--purple-bg);
+        color: var(--purple);
+      }
+      .tier-2 {
+        background: var(--blue-bg);
+        color: var(--blue);
+      }
+      .tier-3 {
+        background: rgba(100, 116, 139, 0.2);
+        color: var(--text2);
+      }
+      .pres-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        border-radius: 10px;
+        margin-bottom: 8px;
+        background: var(--bg2);
+        border: 1px solid var(--border);
+      }
+      .pres-item .pres-name {
+        font-weight: 600;
+      }
+      .pres-item .pres-meta {
+        font-size: 0.8rem;
+        color: var(--text2);
+      }
+      .pres-score {
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        background: var(--green-bg);
+        color: var(--green);
+      }
+      .explain-bar-container {
+        margin-bottom: 10px;
+      }
+      .explain-label {
+        font-size: 0.85rem;
+        margin-bottom: 4px;
+        display: flex;
+        justify-content: space-between;
+      }
+      .explain-bar {
+        height: 6px;
+        border-radius: 3px;
+        background: var(--bg);
+        overflow: hidden;
+      }
+      .explain-bar-fill {
+        height: 100%;
+        border-radius: 3px;
+        background: var(--gradient);
+        transition: width 0.8s ease;
+      }
+      .spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-top: 3px solid white;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin-right: 8px;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .crop-pills {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+      }
+      .crop-pill {
+        padding: 8px 18px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 600;
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        color: var(--text2);
+        transition: all 0.2s;
+      }
+      .crop-pill:hover {
+        border-color: var(--accent);
+        color: var(--text);
+      }
+      .crop-pill.active {
+        background: var(--green-bg);
+        border-color: var(--green);
+        color: var(--green);
+      }
+      .model-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 20px;
+        backdrop-filter: blur(20px);
+        transition: all 0.3s;
+      }
+      .model-card:hover {
+        border-color: rgba(100, 116, 139, 0.5);
+        transform: translateY(-2px);
+      }
+      .model-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+      .model-header-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .model-icon {
+        font-size: 2rem;
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        background: var(--bg2);
+      }
+      .model-name {
+        font-size: 1.15rem;
+        font-weight: 700;
+      }
+      .model-algo {
+        font-size: 0.8rem;
+        color: var(--text2);
+      }
+      .model-status {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: var(--green-bg);
+        color: var(--green);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+      }
+      .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      .metric-box {
+        padding: 12px;
+        border-radius: 10px;
+        background: var(--bg2);
+        text-align: center;
+        border: 1px solid var(--border);
+      }
+      .metric-val {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: var(--accent);
+      }
+      .metric-key {
+        font-size: 0.7rem;
+        color: var(--text2);
+        text-transform: uppercase;
+        margin-top: 2px;
+      }
+      .model-desc {
+        font-size: 0.85rem;
+        color: var(--text2);
+        margin-bottom: 16px;
+        padding: 12px;
+        background: var(--bg2);
+        border-radius: 10px;
+        border-left: 3px solid var(--accent);
+      }
+      .model-config {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .config-item {
+        font-size: 0.8rem;
+        color: var(--text2);
+        padding: 6px 10px;
+        background: var(--bg);
+        border-radius: 6px;
+      }
+      .config-item strong {
+        color: var(--text);
+        font-weight: 600;
+      }
+      .feat-section {
+        margin-top: 16px;
+      }
+      .feat-title {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 10px;
+      }
+      .model-loading {
+        text-align: center;
+        padding: 60px;
+        color: var(--text2);
+      }
+      .chart-wrap {
+        position: relative;
+        height: 400px;
+        border-radius: 12px;
+        background: var(--bg2);
+        padding: 16px;
+        border: 1px solid var(--border);
+      }
+      .forecast-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 12px;
+      }
+      .forecast-table th {
+        text-align: left;
+        padding: 8px 12px;
+        font-size: 0.75rem;
+        color: var(--text2);
+        text-transform: uppercase;
+        border-bottom: 1px solid var(--border);
+      }
+      .forecast-table td {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        border-bottom: 1px solid rgba(100, 116, 139, 0.1);
+      }
+      .forecast-table tr:hover td {
+        background: rgba(255, 255, 255, 0.03);
+      }
+      .price-up {
+        color: var(--green);
+      }
+      .price-down {
+        color: var(--red);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🌾 FarmWise AI</h1>
+        <p data-i18n="subtitle">
+          Harvest Window Optimization • Market Matching • Spoilage Prevention
+        </p>
+        <span class="badge"
+          >✅ <span data-i18n="models_active">5 ML Models Active</span></span
+        >
+        <div class="lang-toggle">
+          <button class="lang-btn active" onclick="setLang('en')">EN</button>
+          <button class="lang-btn" onclick="setLang('hi')">हिंदी</button>
+        </div>
+      </div>
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('predict')">
+          <span data-i18n="tab_predict">🔮 Predict</span>
+        </div>
+        <div class="tab" onclick="switchTab('forecast')">
+          <span data-i18n="tab_forecast">📈 Price Forecast</span>
+        </div>
+        <div class="tab" onclick="switchTab('models')">
+          <span data-i18n="tab_models">🧠 Model Dashboard</span>
+        </div>
+      </div>
+
+      <!-- TAB 1: Predict -->
+      <div class="tab-content active" id="tab-predict">
+        <div class="card">
+          <div class="card-title">
+            <span data-i18n="form_title">📝 Enter Crop & Conditions</span>
+          </div>
+
+          <!-- Auto-Fill Bar -->
+          <div class="auto-fill-bar">
+            <button class="auto-btn" id="weatherBtn" onclick="fetchWeather()">
+              📍 <span data-i18n="fetch_weather">Fetch Live Weather</span>
+            </button>
+            <button class="auto-btn" id="priceBtn" onclick="fetchPrices()">
+              💰 <span data-i18n="fetch_prices">Auto-Fill Prices</span>
+            </button>
+            <span class="auto-status" id="autoStatus"></span>
+          </div>
+
+          <label
+            style="
+              font-size: 0.8rem;
+              font-weight: 600;
+              color: var(--text2);
+              margin-bottom: 8px;
+              display: block;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            "
+            data-i18n="select_crop"
+            >Select Crop</label
+          >
+          <div class="crop-pills" id="cropPills"></div>
+
+          <!-- Farmer fields (always visible) -->
+          <div class="grid-3">
+            <div class="form-group">
+              <label data-i18n="lbl_crop_age">Crop Age (days)</label
+              ><input type="number" id="cropAge" value="75" min="1" max="300" />
+              <div class="hint" data-i18n="hint_crop_age">
+                Days since planting
+              </div>
+            </div>
+            <div class="form-group">
+              <label
+                ><span data-i18n="lbl_price_current">Current Price (₹/Q)</span
+                ><span
+                  class="auto-badge"
+                  id="badge_price"
+                  style="display: none"
+                  data-i18n="auto_filled"
+                  >Auto-filled</span
+                ></label
+              ><input type="number" id="priceCurrent" value="2200" min="100" />
+              <div class="hint" data-i18n="hint_price">
+                Current mandi price per quintal
+              </div>
+            </div>
+            <div class="form-group">
+              <label
+                ><span data-i18n="lbl_price_7d">Predicted Price 7d (₹/Q)</span
+                ><span
+                  class="auto-badge"
+                  id="badge_price7d"
+                  style="display: none"
+                  data-i18n="auto_filled"
+                  >Auto-filled</span
+                ></label
+              ><input type="number" id="price7d" value="2350" min="100" />
+              <div class="hint" data-i18n="hint_price7d">
+                Expected price in 7 days
+              </div>
+            </div>
+          </div>
+
+          <!-- Auto-filled weather fields -->
+          <div class="grid-4">
+            <div class="form-group">
+              <label
+                ><span data-i18n="lbl_rain">Rain Forecast (%)</span
+                ><span
+                  class="auto-badge"
+                  id="badge_rain"
+                  style="display: none"
+                  data-i18n="auto_filled"
+                  >Auto-filled</span
+                ></label
+              ><input type="number" id="rainPct" value="15" min="0" max="100" />
+            </div>
+            <div class="form-group">
+              <label
+                ><span data-i18n="lbl_humidity">Humidity (%)</span
+                ><span
+                  class="auto-badge"
+                  id="badge_hum"
+                  style="display: none"
+                  data-i18n="auto_filled"
+                  >Auto-filled</span
+                ></label
+              ><input
+                type="number"
+                id="humidity"
+                value="55"
+                min="0"
+                max="100"
+              />
+            </div>
+            <div class="form-group">
+              <label
+                ><span data-i18n="lbl_temp">Storage Temp (°C)</span
+                ><span
+                  class="auto-badge"
+                  id="badge_temp"
+                  style="display: none"
+                  data-i18n="auto_filled"
+                  >Auto-filled</span
+                ></label
+              ><input
+                type="number"
+                id="storageTemp"
+                value="30"
+                min="0"
+                max="50"
+              />
+            </div>
+            <div class="form-group">
+              <label data-i18n="lbl_transit">Transit Hours</label
+              ><input
+                type="number"
+                id="transitHrs"
+                value="4"
+                min="1"
+                max="24"
+              />
+            </div>
+          </div>
+          <div class="grid-3">
+            <div class="form-group">
+              <label data-i18n="lbl_qty">Quantity (Quintals)</label
+              ><input type="number" id="quantity" value="10" min="1" />
+            </div>
+            <div class="form-group">
+              <label data-i18n="lbl_budget">Budget (₹/Quintal)</label
+              ><input type="number" id="budget" value="200" min="0" />
+            </div>
+            <div class="form-group">
+              <label data-i18n="lbl_cold">Cold Chain?</label
+              ><select id="coldChain">
+                <option value="false" data-i18n="no">No</option>
+                <option value="true" data-i18n="yes">Yes</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn-predict" id="predictBtn" onclick="runPrediction()">
+            <span data-i18n="btn_predict">🔮 Get Recommendation</span>
+          </button>
+        </div>
+        <div id="results">
+          <div class="decision-banner" id="decisionBanner">
+            <div class="decision-icon" id="decisionIcon"></div>
+            <div class="decision-text" id="decisionText"></div>
+            <div class="decision-sub" id="decisionSub"></div>
+            <div class="decision-conf" id="decisionConf"></div>
+          </div>
+          <div class="grid-4" id="statsRow"></div>
+          <div style="height: 20px"></div>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-title">
+                <span data-i18n="risk_title">⚠️ Risk Analysis</span>
+              </div>
+              <div class="risk-meter">
+                <div class="risk-bar-bg">
+                  <div class="risk-needle" id="riskNeedle"></div>
+                </div>
+                <div class="risk-labels">
+                  <span data-i18n="low">LOW</span
+                  ><span data-i18n="medium">MEDIUM</span
+                  ><span data-i18n="high">HIGH</span
+                  ><span data-i18n="critical">CRITICAL</span>
+                </div>
+              </div>
+              <div id="riskBreakdown" style="margin-top: 16px"></div>
+            </div>
+            <div class="card">
+              <div class="card-title">
+                <span data-i18n="spoilage_title">🧪 Spoilage Assessment</span>
+              </div>
+              <div id="spoilageContent"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">
+              <span data-i18n="market_title"
+                >🏪 Market Rankings (by Net Profit)</span
+              >
+            </div>
+            <div style="overflow-x: auto">
+              <table class="market-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th data-i18n="th_market">Market</th>
+                    <th data-i18n="th_tier">Tier</th>
+                    <th data-i18n="th_price">Est. Price</th>
+                    <th data-i18n="th_transit">Transit</th>
+                    <th data-i18n="th_spoilage">Spoilage Loss</th>
+                    <th data-i18n="th_net">Net ₹/Q</th>
+                    <th data-i18n="th_profit">Total Profit</th>
+                  </tr>
+                </thead>
+                <tbody id="marketBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-title">
+                <span data-i18n="pres_title">🛡️ Preservation Actions</span>
+              </div>
+              <div id="presContent"></div>
+            </div>
+            <div class="card">
+              <div class="card-title">
+                <span data-i18n="explain_title">🔍 Why This Decision?</span>
+              </div>
+              <div id="explainContent"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div
+              class="card-title"
+              style="cursor: pointer"
+              onclick="
+                document.getElementById('jsonBlock').style.display =
+                  document.getElementById('jsonBlock').style.display === 'none'
+                    ? 'block'
+                    : 'none'
+              "
+            >
+              📋 Full JSON (click to toggle)
+            </div>
+            <pre
+              id="jsonBlock"
+              style="
+                display: none;
+                background: var(--bg);
+                padding: 16px;
+                border-radius: 10px;
+                overflow-x: auto;
+                font-size: 0.8rem;
+                color: var(--text2);
+                max-height: 400px;
+                overflow-y: auto;
+              "
+            ></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: Price Forecast -->
+      <div class="tab-content" id="tab-forecast">
+        <div class="model-loading" id="forecastLoading">
+          <span class="spinner"></span>
+          <span data-i18n="loading_forecast"
+            >Loading price forecast data...</span
+          >
+        </div>
+        <div id="forecastContent" style="display: none">
+          <div class="card">
+            <div class="card-title">
+              <span data-i18n="forecast_title">📈 Mandi Price Forecast</span>
+            </div>
+            <div id="forecastHeader" style="margin-bottom: 16px"></div>
+            <div class="chart-wrap"><canvas id="priceChart"></canvas></div>
+          </div>
+          <div class="grid-3" id="forecastMetrics"></div>
+          <div style="height: 20px"></div>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-title">
+                <span data-i18n="forecast_table_title"
+                  >📊 14-Day Price Forecast</span
+                >
+              </div>
+              <table class="forecast-table">
+                <thead>
+                  <tr>
+                    <th data-i18n="th_date">Date</th>
+                    <th data-i18n="th_day">Day</th>
+                    <th data-i18n="th_pred_price">Predicted Price</th>
+                    <th data-i18n="th_change">Change</th>
+                  </tr>
+                </thead>
+                <tbody id="forecastTableBody"></tbody>
+              </table>
+            </div>
+            <div class="card">
+              <div class="card-title">
+                <span data-i18n="feat_title"
+                  >🏆 Top Features Driving Price</span
+                >
+              </div>
+              <div id="priceFeatContent"></div>
+              <div style="margin-top: 16px" id="priceModelInfo"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: Models Dashboard -->
+      <div class="tab-content" id="tab-models">
+        <div class="model-loading" id="modelsLoading">
+          <span class="spinner"></span>
+          <span data-i18n="loading_models">Loading model data...</span>
+        </div>
+        <div id="modelCards"></div>
+      </div>
+    </div>
+  <script>
+// ════════════════════════════════════════════════
+// MULTILINGUAL TRANSLATIONS
+// ════════════════════════════════════════════════
+const I18N = {
+    en: {
+        subtitle: 'Harvest Window Optimization • Market Matching • Spoilage Prevention',
+        models_active: '5 ML Models Active',
+        tab_predict: '🔮 Predict', tab_forecast: '📈 Price Forecast', tab_models: '🧠 Model Dashboard',
+        form_title: '📝 Enter Crop & Conditions',
+        fetch_weather: 'Fetch Live Weather', fetch_prices: 'Auto-Fill Prices',
+        select_crop: 'Select Crop',
+        lbl_crop_age: 'Crop Age (days)', hint_crop_age: 'Days since planting',
+        lbl_price_current: 'Current Price (₹/Q)', hint_price: 'Current mandi price per quintal',
+        lbl_price_7d: 'Predicted Price 7d (₹/Q)', hint_price7d: 'Expected price in 7 days',
+        lbl_rain: 'Rain Forecast (%)', lbl_humidity: 'Humidity (%)',
+        lbl_temp: 'Storage Temp (°C)', lbl_transit: 'Transit Hours',
+        lbl_qty: 'Quantity (Quintals)', lbl_budget: 'Budget (₹/Quintal)', lbl_cold: 'Cold Chain?',
+        no: 'No', yes: 'Yes',
+        btn_predict: '🔮 Get Recommendation', auto_filled: 'Auto-filled',
+        risk_title: '⚠️ Risk Analysis', spoilage_title: '🧪 Spoilage Assessment',
+        market_title: '🏪 Market Rankings (by Net Profit)',
+        th_market: 'Market', th_tier: 'Tier', th_price: 'Est. Price', th_transit: 'Transit',
+        th_spoilage: 'Spoilage Loss', th_net: 'Net ₹/Q', th_profit: 'Total Profit',
+        pres_title: '🛡️ Preservation Actions', explain_title: '🔍 Why This Decision?',
+        loading_forecast: 'Loading price forecast data...', loading_models: 'Loading model data...',
+        forecast_title: '📈 Mandi Price Forecast', forecast_table_title: '📊 14-Day Price Forecast',
+        feat_title: '🏆 Top Features Driving Price',
+        th_date: 'Date', th_day: 'Day', th_pred_price: 'Predicted Price', th_change: 'Change',
+        low: 'LOW', medium: 'MEDIUM', high: 'HIGH', critical: 'CRITICAL',
+        weather_fetching: '📡 Fetching weather...', weather_done: '✅ Weather auto-filled from your location',
+        weather_fail: '⚠️ Using defaults (weather unavailable)',
+        prices_fetching: '💰 Fetching prices...', prices_done: '✅ Prices auto-filled from ML models',
+        analyzing: '⏳ Analyzing...', best_window: 'Best window',
+        confidence: 'Confidence', ml_model: 'ML Model',
+        risk_score: 'Risk Score', maturity: 'Maturity', price_trend: 'Price Trend', spoilage_risk: 'Spoilage Risk',
+        est_loss: 'Est. loss', class_prob: 'Class Probabilities:',
+        no_actions: 'No actions needed',
+        HARVEST_NOW: 'HARVEST NOW', WAIT: 'WAIT', DELAY: 'DELAY',
+    },
+    hi: {
+        subtitle: 'फसल कटाई अनुकूलन • बाज़ार मिलान • खराबी रोकथाम',
+        models_active: '5 ML मॉडल सक्रिय',
+        tab_predict: '🔮 भविष्यवाणी', tab_forecast: '📈 मूल्य पूर्वानुमान', tab_models: '🧠 मॉडल डैशबोर्ड',
+        form_title: '📝 फसल और स्थिति दर्ज करें',
+        fetch_weather: 'लाइव मौसम लाएं', fetch_prices: 'मूल्य स्वतः भरें',
+        select_crop: 'फसल चुनें',
+        lbl_crop_age: 'फसल उम्र (दिन)', hint_crop_age: 'बुवाई के बाद से दिन',
+        lbl_price_current: 'वर्तमान मूल्य (₹/क्विंटल)', hint_price: 'मंडी का वर्तमान भाव',
+        lbl_price_7d: '7 दिन बाद मूल्य (₹/क्विंटल)', hint_price7d: '7 दिन बाद अपेक्षित भाव',
+        lbl_rain: 'बारिश पूर्वानुमान (%)', lbl_humidity: 'नमी (%)',
+        lbl_temp: 'भंडारण तापमान (°C)', lbl_transit: 'परिवहन समय (घंटे)',
+        lbl_qty: 'मात्रा (क्विंटल)', lbl_budget: 'बजट (₹/क्विंटल)', lbl_cold: 'कोल्ड चेन?',
+        no: 'नहीं', yes: 'हाँ',
+        btn_predict: '🔮 सिफारिश प्राप्त करें', auto_filled: 'स्वतः भरा',
+        risk_title: '⚠️ जोखिम विश्लेषण', spoilage_title: '🧪 खराबी आकलन',
+        market_title: '🏪 बाज़ार रैंकिंग (शुद्ध लाभ)',
+        th_market: 'बाज़ार', th_tier: 'श्रेणी', th_price: 'अनु. मूल्य', th_transit: 'परिवहन',
+        th_spoilage: 'नुकसान %', th_net: 'शुद्ध ₹/क्विंटल', th_profit: 'कुल लाभ',
+        pres_title: '🛡️ संरक्षण उपाय', explain_title: '🔍 यह निर्णय क्यों?',
+        loading_forecast: 'मूल्य पूर्वानुमान लोड हो रहा है...', loading_models: 'मॉडल डेटा लोड हो रहा है...',
+        forecast_title: '📈 मंडी मूल्य पूर्वानुमान', forecast_table_title: '📊 14-दिन मूल्य पूर्वानुमान',
+        feat_title: '🏆 मूल्य को प्रभावित करने वाले कारक',
+        th_date: 'तारीख', th_day: 'दिन', th_pred_price: 'अनुमानित मूल्य', th_change: 'बदलाव',
+        low: 'कम', medium: 'मध्यम', high: 'उच्च', critical: 'गंभीर',
+        weather_fetching: '📡 मौसम जानकारी ला रहे हैं...', weather_done: '✅ मौसम आपके स्थान से स्वतः भरा गया',
+        weather_fail: '⚠️ डिफ़ॉल्ट उपयोग (मौसम अनुपलब्ध)',
+        prices_fetching: '💰 मूल्य ला रहे हैं...', prices_done: '✅ ML मॉडल से मूल्य स्वतः भरे गए',
+        analyzing: '⏳ विश्लेषण हो रहा है...', best_window: 'सर्वोत्तम समय',
+        confidence: 'विश्वास', ml_model: 'ML मॉडल',
+        risk_score: 'जोखिम स्कोर', maturity: 'परिपक्वता', price_trend: 'मूल्य रुझान', spoilage_risk: 'खराबी जोखिम',
+        est_loss: 'अनुमानित नुकसान', class_prob: 'श्रेणी संभावनाएं:',
+        no_actions: 'कोई कार्रवाई आवश्यक नहीं',
+        HARVEST_NOW: 'अभी कटाई करें', WAIT: 'इंतजार करें', DELAY: 'देरी करें',
+    }
+};
+
+let currentLang = 'en';
+function T(key) { return (I18N[currentLang] && I18N[currentLang][key]) || I18N.en[key] || key; }
+function setLang(lang) {
+    currentLang = lang;
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.lang-btn').forEach(b => { if((lang==='en' && b.textContent==='EN') || (lang==='hi' && b.textContent==='हिंदी')) b.classList.add('active'); });
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if(I18N[lang][key]) el.textContent = I18N[lang][key];
+    });
+}
+
+// ════════════════════════════════════════════════
+// TAB SWITCHING
+// ════════════════════════════════════════════════
+let priceChartInstance = null;
+function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelector(`#tab-${tab}`).classList.add('active');
+    const tabs = ['predict','forecast','models'];
+    document.querySelectorAll('.tab')[tabs.indexOf(tab)].classList.add('active');
+    if (tab === 'models' && !window._modelsLoaded) loadModels();
+    if (tab === 'forecast' && !window._forecastLoaded) loadForecast();
+}
+
+// ════════════════════════════════════════════════
+// CROP SELECTION
+// ════════════════════════════════════════════════
+const CROPS=['Tomato','Wheat','Rice','Onion','Potato'];
+const CROP_ICONS={Tomato:'🍅',Wheat:'🌾',Rice:'🌾',Onion:'🧅',Potato:'🥔'};
+const CROP_NAMES_HI={Tomato:'टमाटर',Wheat:'गेहूं',Rice:'चावल',Onion:'प्याज',Potato:'आलू'};
+let selectedCrop='Tomato';
+const CROP_DEFAULTS={Tomato:{age:75,price:2200,price7d:2350},Wheat:{age:135,price:2200,price7d:2250},Rice:{age:120,price:2500,price7d:2550},Onion:{age:120,price:1500,price7d:1700},Potato:{age:90,price:1200,price7d:1250}};
+
+const pillsDiv=document.getElementById('cropPills');
+CROPS.forEach(c=>{
+    const pill=document.createElement('div');
+    pill.className='crop-pill'+(c===selectedCrop?' active':'');
+    pill.textContent=CROP_ICONS[c]+' '+c;
+    pill.onclick=()=>{
+        selectedCrop=c;
+        document.querySelectorAll('.crop-pill').forEach(p=>p.classList.remove('active'));
+        pill.classList.add('active');
+        const d=CROP_DEFAULTS[c];
+        document.getElementById('cropAge').value=d.age;
+        document.getElementById('priceCurrent').value=d.price;
+        document.getElementById('price7d').value=d.price7d;
+        fetchPrices(); // Auto-fill prices on crop change
+    };
+    pillsDiv.appendChild(pill);
+});
+
+// ════════════════════════════════════════════════
+// AUTO-FILL: WEATHER
+// ════════════════════════════════════════════════
+async function fetchWeather() {
+    const btn = document.getElementById('weatherBtn');
+    const status = document.getElementById('autoStatus');
+    btn.classList.add('loading');
+    status.textContent = T('weather_fetching');
+
+    try {
+        // Try browser geolocation first
+        let lat = 28.6519, lon = 77.2315; // Default: Delhi
+        try {
+            const pos = await new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, {timeout: 5000});
+            });
+            lat = pos.coords.latitude;
+            lon = pos.coords.longitude;
+        } catch(e) { /* Use default Delhi */ }
+
+        const res = await fetch(`/api/weather?lat=${lat}&lon=${lon}`);
+        const data = await res.json();
+        const af = data.auto_fill;
+
+        document.getElementById('rainPct').value = af.rain_pct;
+        document.getElementById('humidity').value = af.humidity;
+        document.getElementById('storageTemp').value = af.storage_temp;
+
+        // Show auto-fill badges
+        ['badge_rain','badge_hum','badge_temp'].forEach(id => {
+            document.getElementById(id).style.display = 'inline-block';
+            document.getElementById(id).textContent = T('auto_filled');
+        });
+
+        btn.classList.remove('loading');
+        btn.classList.add('done');
+        status.textContent = T('weather_done');
+        setTimeout(() => { btn.classList.remove('done'); }, 3000);
+    } catch(e) {
+        btn.classList.remove('loading');
+        status.textContent = T('weather_fail');
+    }
+}
+
+// ════════════════════════════════════════════════
+// AUTO-FILL: PRICES
+// ════════════════════════════════════════════════
+async function fetchPrices() {
+    const btn = document.getElementById('priceBtn');
+    const status = document.getElementById('autoStatus');
+    btn.classList.add('loading');
+    status.textContent = T('prices_fetching');
+
+    try {
+        const res = await fetch(`/api/auto-prices?crop=${selectedCrop}`);
+        const data = await res.json();
+
+        if (data.status === 'success') {
+            document.getElementById('priceCurrent').value = data.current_price;
+            document.getElementById('price7d').value = data.predicted_7d;
+            ['badge_price','badge_price7d'].forEach(id => {
+                document.getElementById(id).style.display = 'inline-block';
+                document.getElementById(id).textContent = T('auto_filled');
+            });
+            status.textContent = T('prices_done');
+        }
+        btn.classList.remove('loading');
+        btn.classList.add('done');
+        setTimeout(() => { btn.classList.remove('done'); }, 3000);
+    } catch(e) {
+        btn.classList.remove('loading');
+    }
+}
+
+// Auto-fetch weather on page load
+window.addEventListener('load', () => {
+    fetchWeather();
+    fetchPrices();
+});
+
+// ════════════════════════════════════════════════
+// PREDICTION
+// ════════════════════════════════════════════════
+async function runPrediction(){
+    const btn=document.getElementById('predictBtn');
+    btn.disabled=true; btn.innerHTML='<span class="spinner"></span> '+T('analyzing');
+    try{
+        const res=await fetch('/api/predict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({crop:selectedCrop,crop_age_days:+document.getElementById('cropAge').value,rain_pct:+document.getElementById('rainPct').value,humidity:+document.getElementById('humidity').value,price_current:+document.getElementById('priceCurrent').value,price_predicted_7d:+document.getElementById('price7d').value,storage_temp:+document.getElementById('storageTemp').value,transit_hrs:+document.getElementById('transitHrs').value,has_cold_chain:document.getElementById('coldChain').value==='true',quantity_quintals:+document.getElementById('quantity').value,budget_per_quintal:+document.getElementById('budget').value})});
+        const data=await res.json();
+        renderResults(data);
+    }catch(e){alert('Error: '+e.message);}
+    btn.disabled=false; btn.innerHTML=T('btn_predict');
+}
+
+function renderResults(d){
+    document.getElementById('results').classList.add('visible');
+    const rec=d.recommendation,dec=rec.final_decision,w=rec.optimal_harvest_window;
+    const banner=document.getElementById('decisionBanner');
+    banner.className='decision-banner '+(dec==='HARVEST_NOW'?'harvest':dec==='WAIT'?'wait':'delay');
+    document.getElementById('decisionIcon').textContent=dec==='HARVEST_NOW'?'🟢':dec==='WAIT'?'🟡':'🔴';
+    document.getElementById('decisionText').textContent=T(dec) || dec.replace('_',' ');
+    document.getElementById('decisionSub').textContent=`${T('best_window')}: ${w.start_date} → ${w.end_date} (${w.window_days} ${currentLang==='hi'?'दिन':'days'})`;
+    document.getElementById('decisionConf').textContent=`${T('confidence')}: ${rec.confidence_pct}% | ${T('ml_model')}: ${rec.ml_decision}`;
+    const risk=d.risk_analysis;
+    document.getElementById('statsRow').innerHTML=[
+        {val:risk.composite_score+'/100',label:T('risk_score'),color:risk.risk_level==='LOW'?'var(--green)':risk.risk_level==='MEDIUM'?'var(--yellow)':'var(--red)'},
+        {val:d.input.maturity_pct+'%',label:T('maturity'),color:'var(--blue)'},
+        {val:(d.input.price_chg>0?'+':'')+d.input.price_chg+'%',label:T('price_trend'),color:d.input.price_chg>0?'var(--green)':'var(--red)'},
+        {val:d.spoilage.risk_level,label:T('spoilage_risk'),color:d.spoilage.risk_level==='LOW'?'var(--green)':'var(--yellow)'},
+    ].map(s=>`<div class="stat-card"><div class="stat-value" style="color:${s.color}">${s.val}</div><div class="stat-label">${s.label}</div></div>`).join('');
+    document.getElementById('riskNeedle').style.left=Math.min(risk.composite_score,100)+'%';
+    const rb=risk.breakdown;
+    document.getElementById('riskBreakdown').innerHTML=Object.entries(rb).map(([k,v])=>`<div class="explain-bar-container"><div class="explain-label"><span>${k.charAt(0).toUpperCase()+k.slice(1)}</span><span>${v.score} (${v.weight})</span></div><div class="explain-bar"><div class="explain-bar-fill" style="width:${v.score}%"></div></div></div>`).join('');
+    const sp=d.spoilage,spColor=sp.risk_level==='LOW'?'var(--green)':'var(--yellow)';
+    document.getElementById('spoilageContent').innerHTML=`<div style="text-align:center;margin-bottom:16px"><div style="font-size:2rem;font-weight:800;color:${spColor}">${sp.risk_level}</div><div style="font-size:0.85rem;color:var(--text2)">${T('est_loss')}: ${sp.estimated_loss_pct}%</div></div><div style="font-size:0.8rem;color:var(--text2);margin-bottom:8px">${T('class_prob')}</div>${Object.entries(sp.probabilities).map(([k,v])=>`<div class="explain-bar-container"><div class="explain-label"><span>${k}</span><span>${v}%</span></div><div class="explain-bar"><div class="explain-bar-fill" style="width:${v}%"></div></div></div>`).join('')}`;
+    document.getElementById('marketBody').innerHTML=d.all_markets.map(m=>`<tr class="${m.recommended?'best':''}"><td>${m.recommended?'⭐':m.rank}</td><td style="font-weight:${m.recommended?'700':'400'}">${m.market.replace(/_/g,' ')}</td><td><span class="tier-badge tier-${m.tier}">Tier ${m.tier}</span></td><td>₹${m.est_price.toLocaleString()}</td><td>${m.transit_hrs}h</td><td>${m.spoilage_loss_pct}%</td><td style="font-weight:700;color:${m.recommended?'var(--green)':'var(--text)'}">₹${m.net_revenue_per_q.toLocaleString()}</td><td>₹${m.total_profit.toLocaleString()}</td></tr>`).join('');
+    const pres=d.spoilage.preservation_actions||[];
+    document.getElementById('presContent').innerHTML=pres.length?pres.map(a=>`<div class="pres-item"><div><div class="pres-name">#${a.rank} ${a.action}</div><div class="pres-meta">₹${a.cost_per_quintal}/q • ${a.effectiveness_pct}% • +${a.shelf_extension_days}d</div></div><div class="pres-score">${a.score}</div></div>`).join(''):`<div style="color:var(--text2)">${T('no_actions')}</div>`;
+    const maxImp=Math.max(...d.explainability.map(e=>e.importance));
+    document.getElementById('explainContent').innerHTML=d.explainability.map(e=>`<div class="explain-bar-container"><div class="explain-label"><span>${e.factor.replace(/_/g,' ')}</span><span>${(e.importance*100).toFixed(1)}%</span></div><div class="explain-bar"><div class="explain-bar-fill" style="width:${(e.importance/maxImp*100)}%"></div></div></div>`).join('');
+    document.getElementById('jsonBlock').textContent=JSON.stringify(d,null,2);
+    document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ════════════════════════════════════════════════
+// PRICE FORECAST TAB
+// ════════════════════════════════════════════════
+async function loadForecast(){
+    try{
+        const res=await fetch('/api/price-forecast');
+        const d=await res.json();
+        if(d.error){document.getElementById('forecastLoading').innerHTML='❌ '+d.error;return;}
+        document.getElementById('forecastLoading').style.display='none';
+        document.getElementById('forecastContent').style.display='block';
+        renderForecast(d);
+        window._forecastLoaded=true;
+    }catch(e){document.getElementById('forecastLoading').innerHTML='❌ '+e.message;}
+}
+
+function renderForecast(d){
+    document.getElementById('forecastHeader').innerHTML=`
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+            <div style="font-size:1.5rem;font-weight:800">🍅 ${d.commodity}</div>
+            <div style="color:var(--text2)">Market: <strong style="color:var(--text)">${d.market}</strong></div>
+            <div style="color:var(--text2)">Data: <strong style="color:var(--text)">${d.data_info.total_records.toLocaleString()} records</strong></div>
+            <div style="color:var(--text2)">Range: <strong style="color:var(--text)">${d.data_info.date_range}</strong></div>
+        </div>`;
+    const hist=d.historical||[],fc=d.forecasts||[];
+    const histDates=hist.map(h=>h.Date||h.date),histPrices=hist.map(h=>h.Price||h.price);
+    const fcDates=fc.map(f=>f.date),fcPrices=fc.map(f=>f.price);
+    const allDates=[...histDates,...fcDates];
+    const allHist=[...histPrices,...new Array(fcDates.length).fill(null)];
+    const allFc=[...new Array(histDates.length-1).fill(null),histPrices[histPrices.length-1],...fcPrices];
+    if(priceChartInstance) priceChartInstance.destroy();
+    const ctx=document.getElementById('priceChart').getContext('2d');
+    priceChartInstance=new Chart(ctx,{
+        type:'line',
+        data:{labels:allDates,datasets:[
+            {label:'Historical Price',data:allHist,borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.1)',fill:true,tension:0.3,pointRadius:1,borderWidth:2},
+            {label:'Forecasted Price',data:allFc,borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.1)',fill:true,tension:0.3,pointRadius:3,borderWidth:2.5,borderDash:[6,3]},
+        ]},
+        options:{responsive:true,maintainAspectRatio:false,
+            plugins:{legend:{labels:{color:'#94a3b8',font:{family:'Inter'}}},tooltip:{backgroundColor:'#1e293b',titleColor:'#e2e8f0',bodyColor:'#94a3b8',borderColor:'rgba(100,116,139,0.3)',borderWidth:1,callbacks:{label:ctx=>ctx.raw!==null?`₹${ctx.raw.toLocaleString()}`:''}}},
+            scales:{x:{ticks:{color:'#94a3b8',maxTicksLimit:12,font:{size:10}},grid:{color:'rgba(100,116,139,0.15)'}},y:{ticks:{color:'#94a3b8',callback:v=>'₹'+v.toLocaleString()},grid:{color:'rgba(100,116,139,0.15)'}}}
+        }
+    });
+    const xgb=d.metrics.XGBoost||{},lstm=d.metrics.LSTM;
+    let metricsHTML=`<div class="stat-card"><div class="stat-value" style="color:var(--green)">₹${xgb.mae||'-'}</div><div class="stat-label">XGBoost MAE</div></div><div class="stat-card"><div class="stat-value" style="color:var(--blue)">₹${xgb.rmse||'-'}</div><div class="stat-label">XGBoost RMSE</div></div><div class="stat-card"><div class="stat-value" style="color:var(--purple)">${xgb.mape||'-'}%</div><div class="stat-label">XGBoost MAPE</div></div>`;
+    if(lstm) metricsHTML+=`<div class="stat-card"><div class="stat-value" style="color:var(--yellow)">₹${lstm.mae||'-'}</div><div class="stat-label">LSTM MAE</div></div>`;
+    document.getElementById('forecastMetrics').innerHTML=metricsHTML;
+    let prevPrice=histPrices[histPrices.length-1];
+    document.getElementById('forecastTableBody').innerHTML=fc.map(f=>{
+        const chg=((f.price-prevPrice)/prevPrice*100).toFixed(1);
+        const cls=chg>=0?'price-up':'price-down';
+        const arrow=chg>=0?'▲':'▼';
+        prevPrice=f.price;
+        return `<tr><td>${f.date}</td><td>${f.day.slice(0,3)}</td><td style="font-weight:700">₹${f.price.toLocaleString()}</td><td class="${cls}">${arrow} ${Math.abs(chg)}%</td></tr>`;
+    }).join('');
+    const feats=d.feature_importance||[];
+    const maxFI=Math.max(...feats.map(f=>f.Importance));
+    document.getElementById('priceFeatContent').innerHTML=feats.slice(0,8).map(f=>`<div class="explain-bar-container"><div class="explain-label"><span>${f.Feature.replace(/_/g,' ')}</span><span>${(f.Importance*100).toFixed(1)}%</span></div><div class="explain-bar"><div class="explain-bar-fill" style="width:${(f.Importance/maxFI*100)}%;background:var(--blue)"></div></div></div>`).join('');
+    document.getElementById('priceModelInfo').innerHTML=`<div class="config-item"><strong>Algorithm:</strong> XGBoost + LSTM Ensemble</div><div class="config-item" style="margin-top:6px"><strong>Features:</strong> ${d.data_info.num_features} (lag, rolling, EMA, calendar)</div><div class="config-item" style="margin-top:6px"><strong>CV Mean MAE:</strong> ₹${d.cv_mean_mae}</div>`;
+}
+
+// ════════════════════════════════════════════════
+// MODEL DASHBOARD
+// ════════════════════════════════════════════════
+async function loadModels(){try{const res=await fetch('/api/models');const data=await res.json();document.getElementById('modelsLoading').style.display='none';renderModels(data.models);window._modelsLoaded=true;}catch(e){document.getElementById('modelsLoading').innerHTML='❌ '+e.message;}}
+
+function renderModels(models){
+    const container=document.getElementById('modelCards');
+    const COLORS=['var(--green)','var(--blue)','var(--yellow)','var(--purple)','var(--accent)'];
+    container.innerHTML=models.map((m,i)=>{
+        const color=COLORS[i%COLORS.length];
+        const metricsHTML=Object.entries(m.metrics).map(([k,v])=>`<div class="metric-box"><div class="metric-val" style="color:${color}">${v}</div><div class="metric-key">${k}</div></div>`).join('');
+        const configHTML=Object.entries(m.config).map(([k,v])=>`<div class="config-item"><strong>${k.replace(/_/g,' ')}:</strong> ${v}</div>`).join('');
+        const maxFI=m.feature_importances.length?Math.max(...m.feature_importances.map(f=>f.importance)):1;
+        const featHTML=m.feature_importances.slice(0,8).map(f=>`<div class="explain-bar-container"><div class="explain-label"><span>${f.feature.replace(/_/g,' ')}</span><span>${(f.importance*100).toFixed(1)}%</span></div><div class="explain-bar"><div class="explain-bar-fill" style="width:${(f.importance/maxFI*100)}%;background:${color}"></div></div></div>`).join('');
+        return `<div class="model-card"><div class="model-header"><div class="model-header-left"><div class="model-icon">${m.icon}</div><div><div class="model-name">${m.name}</div><div class="model-algo">${m.algorithm}</div></div></div><div class="model-status">● ${m.status.toUpperCase()}</div></div><div class="model-desc">${m.description}</div><div class="metrics-grid">${metricsHTML}</div>${featHTML?`<div class="feat-section"><div class="feat-title">Top Feature Importances</div>${featHTML}</div>`:''}<div style="margin-top:16px"><div class="feat-title">Model Configuration</div><div class="model-config">${configHTML}</div></div></div>`;
+    }).join('');
+}
+
+</script>
+</body>
+</html>

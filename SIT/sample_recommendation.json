@@ -1,0 +1,215 @@
+{
+  "status": "success",
+  "timestamp": "2026-02-26T23:09:40.044912",
+  "input": {
+    "crop": "Tomato",
+    "crop_age_days": 75,
+    "date": "2024-02-10",
+    "rain_pct": 10,
+    "humidity": 55,
+    "price_current": 2200,
+    "price_predicted_7d": 2350,
+    "price_chg": 6.8,
+    "maturity_pct": 88.2
+  },
+  "recommendation": {
+    "final_decision": "HARVEST_NOW",
+    "confidence_pct": 95.4,
+    "optimal_harvest_window": {
+      "start_date": "2024-02-10",
+      "end_date": "2024-02-15",
+      "window_days": 5
+    }
+  },
+  "risk_analysis": {
+    "composite_score": 18.6,
+    "risk_level": "LOW",
+    "advice": "Good conditions",
+    "breakdown": {
+      "weather": 3.0,
+      "humidity": 14.4,
+      "price": 54.1,
+      "maturity": 7.6
+    }
+  },
+  "best_market": {
+    "market": "Local_Mandi",
+    "tier": 3,
+    "est_price": 2200.0,
+    "transit_hrs": 1,
+    "transport_cost": 25,
+    "spoilage_loss_pct": 22.0,
+    "net_revenue_per_q": 1691.0,
+    "total_profit": 16910.0,
+    "rank": 1,
+    "recommended": true
+  },
+  "all_markets": [
+    {
+      "market": "Local_Mandi",
+      "tier": 3,
+      "est_price": 2200.0,
+      "transit_hrs": 1,
+      "transport_cost": 25,
+      "spoilage_loss_pct": 22.0,
+      "net_revenue_per_q": 1691.0,
+      "total_profit": 16910.0,
+      "rank": 1,
+      "recommended": true
+    },
+    {
+      "market": "Kolar",
+      "tier": 2,
+      "est_price": 2266.0,
+      "transit_hrs": 3,
+      "transport_cost": 75,
+      "spoilage_loss_pct": 46.0,
+      "net_revenue_per_q": 1149.0,
+      "total_profit": 11486.0,
+      "rank": 2,
+      "recommended": false
+    },
+    {
+      "market": "Madanapalli",
+      "tier": 2,
+      "est_price": 2310.0,
+      "transit_hrs": 4,
+      "transport_cost": 100,
+      "spoilage_loss_pct": 58.0,
+      "net_revenue_per_q": 870.0,
+      "total_profit": 8702.0,
+      "rank": 3,
+      "recommended": false
+    },
+    {
+      "market": "Lasalgaon",
+      "tier": 2,
+      "est_price": 2376.0,
+      "transit_hrs": 6,
+      "transport_cost": 150,
+      "spoilage_loss_pct": 82.0,
+      "net_revenue_per_q": 278.0,
+      "total_profit": 2777.0,
+      "rank": 4,
+      "recommended": false
+    },
+    {
+      "market": "Azadpur_Delhi",
+      "tier": 1,
+      "est_price": 2530.0,
+      "transit_hrs": 8,
+      "transport_cost": 200,
+      "spoilage_loss_pct": 86.8,
+      "net_revenue_per_q": 134.0,
+      "total_profit": 1340.0,
+      "rank": 5,
+      "recommended": false
+    },
+    {
+      "market": "Vashi_Mumbai",
+      "tier": 1,
+      "est_price": 2464.0,
+      "transit_hrs": 12,
+      "transport_cost": 300,
+      "spoilage_loss_pct": 90.0,
+      "net_revenue_per_q": -54.0,
+      "total_profit": -536.0,
+      "rank": 6,
+      "recommended": false
+    }
+  ],
+  "spoilage": {
+    "risk_level": "LOW",
+    "estimated_loss_pct": 10,
+    "class_probabilities": {
+      "LOW": 100.0,
+      "MEDIUM": 0.0
+    },
+    "actions": [
+      {
+        "action": "Solar Drying",
+        "cost_per_quintal": 30,
+        "effectiveness_pct": 70,
+        "shelf_extension_days": 90,
+        "cost_effectiveness_score": 2.1,
+        "risk_after_action": 3.0,
+        "rank": 1
+      },
+      {
+        "action": "Cold Storage",
+        "cost_per_quintal": 150,
+        "effectiveness_pct": 90,
+        "shelf_extension_days": 30,
+        "cost_effectiveness_score": 0.18,
+        "risk_after_action": 1.0,
+        "rank": 2
+      },
+      {
+        "action": "Cool Chamber",
+        "cost_per_quintal": 80,
+        "effectiveness_pct": 75,
+        "shelf_extension_days": 10,
+        "cost_effectiveness_score": 0.09,
+        "risk_after_action": 2.5,
+        "rank": 3
+      }
+    ]
+  },
+  "explainability": {
+    "harvest_factors": [
+      {
+        "factor": "days_since_mat",
+        "impact": 0.122,
+        "direction": "contributes",
+        "importance": 0.122
+      },
+      {
+        "factor": "comp_risk",
+        "impact": 0.064,
+        "direction": "contributes",
+        "importance": 0.064
+      },
+      {
+        "factor": "maturity_pct",
+        "impact": 0.056,
+        "direction": "contributes",
+        "importance": 0.056
+      }
+    ],
+    "spoilage_factors": [
+      {
+        "factor": "shelf_life",
+        "impact": 4.029,
+        "direction": "contributes",
+        "importance": 4.029
+      },
+      {
+        "factor": "hum_max",
+        "impact": 0.802,
+        "direction": "contributes",
+        "importance": 0.802
+      },
+      {
+        "factor": "has_cold_chain",
+        "impact": 0.315,
+        "direction": "contributes",
+        "importance": 0.315
+      }
+    ],
+    "methodology": "SHAP TreeExplainer"
+  },
+  "model_info": {
+    "harvest_model": "RandomForest",
+    "harvest_accuracy": 94.1,
+    "spoilage_model": "GradientBoosting",
+    "spoilage_accuracy": 99.4,
+    "price_model": "XGBoost",
+    "price_mae": 96.63,
+    "ml_decision": "HARVEST_NOW",
+    "ml_confidence": 95.4
+  },
+  "farmer_text": {
+    "en": "\ud83d\udfe2 HARVEST NOW \u2014 Best window: 2024-02-10 to 2024-02-15\nRisk Level: \ud83d\udfe2 LOW (18.6/100)\n\ud83d\udccd Best market: Local_Mandi \u2014 \u20b92200/quintal (after 1h transport)\n\u26a0\ufe0f Spoilage risk: LOW \u2014 Use Solar Drying (\u20b930/quintal)\nWeather: favorable (rain 10%, humidity 55%)\nPrice trend: up 6.8% this week\nCrop: 88% mature (not ready)",
+    "hi": "\ud83d\udfe2 \u0905\u092d\u0940 \u0915\u093e\u091f\u0947\u0902 \u2014 \u0938\u0930\u094d\u0935\u094b\u0924\u094d\u0924\u092e \u0938\u092e\u092f: 2024-02-10 \u0938\u0947 2024-02-15\n\u091c\u094b\u0916\u093f\u092e \u0938\u094d\u0924\u0930: \ud83d\udfe2 LOW (18.6/100)\n\ud83d\udccd \u0938\u092c\u0938\u0947 \u0905\u091a\u094d\u091b\u093e \u092c\u093e\u091c\u093e\u0930: Local_Mandi \u2014 \u20b92200/\u0915\u094d\u0935\u093f\u0902\u091f\u0932 (1 \u0918\u0902\u091f\u0947 \u0926\u0942\u0930)\n\u26a0\ufe0f \u0916\u0930\u093e\u092c\u0940 \u0915\u093e \u0916\u0924\u0930\u093e: LOW \u2014 Solar Drying \u0915\u0930\u0947\u0902 (\u20b930/\u0915\u094d\u0935\u093f\u0902\u091f\u0932)\n\u092e\u094c\u0938\u092e: favorable (\u092c\u093e\u0930\u093f\u0936 10%, \u0928\u092e\u0940 55%)\n\u0915\u0940\u092e\u0924: \u0907\u0938 \u0939\u092b\u094d\u0924\u0947 6.8% up\n\u092b\u0938\u0932: 88% \u092a\u0915\u0940 (not ready)"
+  }
+}

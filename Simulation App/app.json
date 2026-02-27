@@ -1,0 +1,25 @@
+{
+    "expo": {
+        "name": "Market2D",
+        "slug": "market2d",
+        "version": "1.0.0",
+        "orientation": "portrait",
+        "userInterfaceStyle": "light",
+        "splash": {
+            "resizeMode": "contain",
+            "backgroundColor": "#1a1a2e"
+        },
+        "assetBundlePatterns": [
+            "**/*"
+        ],
+        "ios": {
+            "supportsTablet": true
+        },
+        "android": {
+            "adaptiveIcon": {
+                "backgroundColor": "#1a1a2e"
+            }
+        },
+        "web": {}
+    }
+}
